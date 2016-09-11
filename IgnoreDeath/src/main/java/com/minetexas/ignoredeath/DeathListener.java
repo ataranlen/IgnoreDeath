@@ -2,7 +2,13 @@ package com.minetexas.ignoredeath;
 
 import java.util.Collection;
 
+import net.md_5.bungee.api.chat.ClickEvent;
+import net.md_5.bungee.api.chat.ComponentBuilder;
+import net.md_5.bungee.api.chat.HoverEvent;
+import net.md_5.bungee.api.chat.TextComponent;
+
 import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.EventPriority;
@@ -10,7 +16,9 @@ import org.bukkit.event.Listener;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerJoinEvent;
 import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.inventory.ItemStack;
 
+import com.avaje.ebean.text.json.JsonElementString;
 import com.dthielke.herochat.Chatter;
 import com.dthielke.herochat.ChatterManager;
 import com.dthielke.herochat.Herochat;
@@ -27,6 +35,10 @@ public class DeathListener implements Listener {
 		Boolean useHerochat = false;
 		Collection <? extends Player> players = Bukkit.getOnlinePlayers();//.forEach(p -> p.sendMessage(GTColor.LightGreen+meme));
 
+		Entity killer = e.getEntity().getKiller();
+
+		
+		
 		if (MTSettings.hasHerochat == true) {
 			Herochat hc = Herochat.getPlugin();
 			useHerochat = hc.isEnabled();
@@ -41,9 +53,37 @@ public class DeathListener implements Listener {
 					continue;
 				}
 			}
+			if (e.getEntity() instanceof Player) {
+				if (killer instanceof Player) {
+					ItemStack it = ((Player) killer).getInventory().getItemInMainHand();
+					if (it != null) {
+					TextComponent msg = new TextComponent( message );
+					msg.setHoverEvent( new HoverEvent( HoverEvent.Action.SHOW_ITEM, new ComponentBuilder(itemTooltip(it)).create() ) );
+
+					p.spigot().sendMessage( msg );
+
+					continue;
+					}
+				}
+			} 
 			p.sendMessage(message);
+			
 		}
 	}
+	  
+	  public String itemTooltip(ItemStack itemStack)
+	  {
+	    try
+	    {
+	      Object nmsItem = Reflection.getMethod(Reflection.getOBCClass("inventory.CraftItemStack"), "asNMSCopy", new Class[] { ItemStack.class }).invoke(null, new Object[] { itemStack });
+	      return (Reflection.getMethod(Reflection.getNMSClass("ItemStack"), "save", new Class[] { Reflection.getNMSClass("NBTTagCompound") }).invoke(nmsItem, new Object[] { Reflection.getNMSClass("NBTTagCompound").newInstance() }).toString());
+	    }
+	    catch (Exception e)
+	    {
+	      e.printStackTrace();
+	    }
+	    return null;
+	  }
 	
 	@EventHandler(priority = EventPriority.LOW)
     public void onJoin(PlayerJoinEvent e){
