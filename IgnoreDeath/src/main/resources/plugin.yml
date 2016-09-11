@@ -1,0 +1,5 @@
+name: IgnoreDeath
+main: com.minetexas.ignoredeath.IgnoreDeath
+version: 0.1
+author: ataranlen
+description: Use HeroChat to ignore death messages.
